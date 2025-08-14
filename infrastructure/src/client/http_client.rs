@@ -1,7 +1,7 @@
 use std::time::Duration;
 use async_trait::async_trait;
 use reqwest::{Client, Response};
-use tracing::{info, error, debug};
+use tracing::{info, debug};
 use domain::model::{
     content::{HtmlContent, ContentMetadata},
     request::FetchContentRequest,
@@ -134,7 +134,7 @@ fn extract_text_content(html: &str) -> String {
     let document = Html::parse_document(html);
     
     // Remove script and style elements
-    let script_selector = Selector::parse("script, style").unwrap();
+    let _script_selector = Selector::parse("script, style").unwrap();
     let text_selector = Selector::parse("body").unwrap();
     
     let body = document.select(&text_selector).next();

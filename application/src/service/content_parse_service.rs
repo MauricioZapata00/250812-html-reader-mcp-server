@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use async_trait::async_trait;
-use tracing::{info, error};
+use tracing::info;
 use domain::model::content::HtmlContent;
 use domain::port::content_parser::{ContentParser, ContentParserResult};
 

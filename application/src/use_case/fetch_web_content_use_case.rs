@@ -1,14 +1,12 @@
 use std::sync::Arc;
-use async_trait::async_trait;
 use tracing::{info, error};
 use domain::model::{
-    content::HtmlContent,
     request::FetchContentRequest,
     response::{FetchContentResponse, McpResponse, McpError},
 };
 use domain::port::{
     content_fetcher::{ContentFetcher, ContentFetcherError},
-    content_parser::{ContentParser, ContentParserError},
+    content_parser::ContentParser,
 };
 use crate::service::{
     content_fetch_service::ContentFetchService,

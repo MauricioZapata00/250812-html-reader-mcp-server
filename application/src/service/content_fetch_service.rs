@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use async_trait::async_trait;
-use tracing::{info, error};
+use tracing::info;
 use domain::model::{content::HtmlContent, request::FetchContentRequest};
 use domain::port::content_fetcher::{ContentFetcher, ContentFetcherResult};
 

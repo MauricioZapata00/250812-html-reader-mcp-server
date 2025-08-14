@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
 use serde_json::{json, Value};
 use tracing::{info, error, debug, Level};
 use tracing_subscriber::FmtSubscriber;
@@ -16,12 +16,7 @@ use infrastructure::{
     mcp::server::McpServer,
 };
 
-type HttpContentFetcher = HttpClient;
-type HtmlContentParser = HtmlParserAdapter;
-type FetchService = ContentFetchService<HttpContentFetcher>;
-type ParseService = ContentParseService<HtmlContentParser>;
-type WebContentUseCase = FetchWebContentUseCase<HttpContentFetcher, HtmlContentParser>;
-type AppMcpServer = McpServer<HttpContentFetcher, HtmlContentParser>;
+type AppMcpServer = McpServer<HttpClient, HtmlParserAdapter>;
 
 struct AppState {
     mcp_server: AppMcpServer,
@@ -90,6 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let response_json = serde_json::to_string(&response)?;
                 
                 println!("{}", response_json);
+                io::stdout().flush().unwrap();
                 
                 debug!("Sent response: {}", response_json);
             }
@@ -106,6 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 });
                 
                 println!("{}", serde_json::to_string(&error_response)?);
+                io::stdout().flush().unwrap();
             }
         }
     }

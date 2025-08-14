@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use scraper::{Html, Selector};
 use tracing::{info, debug};
 use domain::model::content::{HtmlContent, ContentMetadata};
-use domain::port::content_parser::{ContentParser, ContentParserResult, ContentParserError};
+use domain::port::content_parser::{ContentParser, ContentParserResult};
 
 pub struct HtmlParserAdapter;
 

@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use tracing::{info, error, debug};
 use domain::model::{
     request::{FetchContentRequest, McpRequest},
-    response::{McpResponse, McpError, ToolCapabilities},
+    response::ToolCapabilities,
 };
 use application::use_case::fetch_web_content_use_case::FetchWebContentUseCase;
 use domain::port::{content_fetcher::ContentFetcher, content_parser::ContentParser};
@@ -206,7 +206,7 @@ mod tests {
     use async_trait::async_trait;
     use domain::model::content::{ContentMetadata, HtmlContent};
     use domain::port::content_fetcher::{ContentFetcher, ContentFetcherError, ContentFetcherResult};
-    use domain::port::content_parser::{ContentParser, ContentParserError, ContentParserResult};
+    use domain::port::content_parser::{ContentParser, ContentParserResult};
     use application::service::{
         content_fetch_service::ContentFetchService,
         content_parse_service::ContentParseService,
