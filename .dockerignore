@@ -1,0 +1,59 @@
+# Rust build artifacts
+target/
+*.pdb
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Docker files (already copied explicitly)
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# Test files and coverage
+coverage/
+*.profraw
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Editor backup files
+*~
+*.orig
+*.rej
+
+# Rust-specific
+**/*.rs.bk
+# Keep Cargo.lock for reproducible builds
+# Cargo.lock

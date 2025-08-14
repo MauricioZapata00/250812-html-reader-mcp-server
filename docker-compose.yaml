@@ -1,0 +1,61 @@
+# Note: version is obsolete in newer Docker Compose versions
+
+services:
+  html-mcp-reader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: html-mcp-reader:latest
+    container_name: html-mcp-reader
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - RUST_LOG=info
+      - RUST_BACKTRACE=1
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "pgrep", "html-mcp-reader"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # If your application needs to communicate with other services
+    # networks:
+    #   - mcp-network
+    
+    # If you need persistent storage
+    # volumes:
+    #   - ./data:/app/data
+    
+    # Since MCP typically uses stdin/stdout, we keep the container running
+    # and allow interactive mode if needed
+    stdin_open: true
+    tty: true
+    
+    # Labels for better organization
+    labels:
+      - "com.example.description=HTML MCP Reader - Model Context Protocol server for web content fetching"
+      - "com.example.version=0.1.0"
+      - "com.example.component=mcp-server"
+
+# If you need a custom network
+# networks:
+#   mcp-network:
+#     driver: bridge
+
+# If you need volumes for persistent data
+# volumes:
+#   app-data:
