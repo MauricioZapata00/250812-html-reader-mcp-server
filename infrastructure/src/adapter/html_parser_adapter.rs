@@ -21,15 +21,6 @@ impl HtmlParserAdapter {
             .filter(|title| !title.is_empty())
     }
 
-    fn extract_meta_description(&self, raw_html: &str) -> Option<String> {
-        let document = Html::parse_document(raw_html);
-        let meta_selector = Selector::parse("meta[name='description']").ok()?;
-        document
-            .select(&meta_selector)
-            .next()
-            .and_then(|element| element.value().attr("content"))
-            .map(|content| content.to_string())
-    }
 
     fn clean_text_content(&self, text: String) -> String {
         text.lines()
@@ -286,25 +277,6 @@ mod tests {
         assert_eq!(title, None);
     }
 
-    #[tokio::test]
-    async fn test_extract_meta_description() {
-        let adapter = HtmlParserAdapter::new();
-        
-        // Test with meta description
-        let html = r#"<html><head><meta name="description" content="Test description"></head></html>"#;
-        let desc = adapter.extract_meta_description(html);
-        assert_eq!(desc, Some("Test description".to_string()));
-        
-        // Test without meta description
-        let html = "<html><head></head></html>";
-        let desc = adapter.extract_meta_description(html);
-        assert_eq!(desc, None);
-        
-        // Test with empty content
-        let html = r#"<html><head><meta name="description" content=""></head></html>"#;
-        let desc = adapter.extract_meta_description(html);
-        assert_eq!(desc, Some("".to_string()));
-    }
 
     #[tokio::test]
     async fn test_clean_text_content() {

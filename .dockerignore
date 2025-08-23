@@ -1,4 +1,4 @@
-# Rust build artifacts (temporarily allowing target for Docker fix)
+# Rust build artifacts (temporarily allowing target for Docker)
 # target/
 *.pdb
 

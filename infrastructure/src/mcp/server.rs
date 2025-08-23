@@ -495,8 +495,8 @@ mod tests {
 
         let request = result.unwrap();
         assert_eq!(request.url, "https://example.com");
-        assert_eq!(request.extract_text_only, true);
-        assert_eq!(request.follow_redirects, true);
+        assert_eq!(request.extract_text_only, Some(true));
+        assert_eq!(request.follow_redirects, Some(true));
         assert_eq!(request.timeout_seconds, None);
         assert_eq!(request.user_agent, None);
     }
@@ -517,8 +517,8 @@ mod tests {
 
         let request = result.unwrap();
         assert_eq!(request.url, "https://example.com");
-        assert_eq!(request.extract_text_only, false);
-        assert_eq!(request.follow_redirects, false);
+        assert_eq!(request.extract_text_only, Some(false));
+        assert_eq!(request.follow_redirects, Some(false));
         assert_eq!(request.timeout_seconds, Some(60));
         assert_eq!(request.user_agent, Some("Custom Agent".to_string()));
     }
@@ -537,7 +537,7 @@ mod tests {
         assert!(result.is_ok()); // Should use default value
 
         let request = result.unwrap();
-        assert_eq!(request.extract_text_only, true); // Should use default
+        assert_eq!(request.extract_text_only, Some(true)); // Should use default
     }
 
     #[tokio::test]

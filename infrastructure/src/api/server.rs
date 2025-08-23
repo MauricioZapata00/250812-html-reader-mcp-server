@@ -112,7 +112,7 @@ mod tests {
     
     use domain::model::content::{ContentMetadata, HtmlContent};
     use domain::port::content_fetcher::{ContentFetcher, ContentFetcherError, ContentFetcherResult};
-    use domain::port::content_parser::{ContentParser, ContentParserError, ContentParserResult};
+    use domain::port::content_parser::{ContentParser, ContentParserResult};
     use application::service::{
         content_fetch_service::ContentFetchService,
         content_parse_service::ContentParseService,

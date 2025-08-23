@@ -15,7 +15,7 @@ RUN useradd -m -u 1000 appuser
 # Set the working directory
 WORKDIR /app
 
-# Copy the working binary from host (workaround for Docker build issue)
+# Copy the working binary from host (ensures compatibility)
 COPY target/release/html-mcp-reader /app/html-mcp-reader
 
 # Change ownership to the non-root user

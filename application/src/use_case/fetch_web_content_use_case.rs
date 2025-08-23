@@ -20,7 +20,7 @@ where
     P: ContentParser,
 {
     fetch_service: Arc<ContentFetchService<F>>,
-    parse_service: Arc<ContentParseService<P>>,
+    _parse_service: Arc<ContentParseService<P>>, // Keep for potential future use
 }
 
 impl<F, P> FetchWebContentUseCase<F, P>
@@ -34,7 +34,7 @@ where
     ) -> Self {
         Self {
             fetch_service,
-            parse_service,
+            _parse_service: parse_service,
         }
     }
 
