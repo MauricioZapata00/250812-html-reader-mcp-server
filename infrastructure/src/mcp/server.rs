@@ -191,8 +191,8 @@ where
 
         Ok(FetchContentRequest {
             url,
-            extract_text_only,
-            follow_redirects,
+            extract_text_only: Some(extract_text_only),
+            follow_redirects: Some(follow_redirects),
             timeout_seconds,
             user_agent,
         })

@@ -1,5 +1,5 @@
-# Rust build artifacts
-target/
+# Rust build artifacts (temporarily allowing target for Docker fix)
+# target/
 *.pdb
 
 # IDE files

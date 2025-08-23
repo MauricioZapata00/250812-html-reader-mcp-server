@@ -111,8 +111,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -134,8 +134,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -156,8 +156,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -181,8 +181,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com/404".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -202,8 +202,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -219,8 +219,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -237,8 +237,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "ftp://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -255,8 +255,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "http://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -272,8 +272,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(400),
             user_agent: Some("test".to_string()),
         };
@@ -290,8 +290,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(300),
             user_agent: Some("test".to_string()),
         };
@@ -307,8 +307,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: None,
             user_agent: Some("test".to_string()),
         };
@@ -324,8 +324,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(0),
             user_agent: Some("test".to_string()),
         };

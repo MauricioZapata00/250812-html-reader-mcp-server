@@ -7,8 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Build and Run:**
 ```bash
 cargo build                           # Build all workspace members
-cargo run --bin html-mcp-reader       # Run the MCP server
-cargo check                           # Quick compilation check
+cargo run --bin html-mcp-reader       # Run in default mode (API mode when in terminal, MCP mode when stdin available)
+cargo run -- mcp                     # Run as MCP server
+cargo run -- api --port 8085         # Run as REST API server
+cargo check                          # Quick compilation check
 ```
 
 **Testing:**
@@ -26,7 +28,7 @@ cargo fmt                             # Code formatting
 
 ## Architecture Overview
 
-This is a **Clean Architecture** Rust workspace implementing an MCP (Model Context Protocol) server for web content fetching. The architecture enforces strict dependency direction: Domain ← Application ← Infrastructure ← Runner.
+This is a **Clean Architecture** Rust workspace implementing both an MCP (Model Context Protocol) server and REST API server for web content fetching. The architecture enforces strict dependency direction: Domain ← Application ← Infrastructure ← Runner.
 
 ### Workspace Structure
 
@@ -42,9 +44,10 @@ This is a **Clean Architecture** Rust workspace implementing an MCP (Model Conte
   - `client/http_client.rs`: HTTP client using reqwest
   - `adapter/html_parser_adapter.rs`: HTML parsing using scraper
   - `mcp/server.rs`: MCP protocol JSON-RPC server
+  - `api/server.rs`: REST API server using Axum
 
 - **runner/**: Dependency injection and application entry point
-  - `main.rs`: Wires all dependencies using Arc<T> and starts stdin/stdout MCP server
+  - `main.rs`: Wires all dependencies using Arc<T> and supports dual mode (MCP/API)
 
 ### Key Design Patterns
 
@@ -63,12 +66,23 @@ FetchWebContentUseCase<F: ContentFetcher, P: ContentParser>
 
 **Async Traits**: All external I/O operations use `#[async_trait]` for async trait methods.
 
-## MCP Protocol Implementation
+## Dual Mode Support
 
-The server implements MCP 2024-11-05 protocol spec:
-- Communicates via JSON-RPC over stdin/stdout
-- Implements `tools/list`, `tools/call`, and `initialize` methods
-- Single tool: `fetch_web_content` for web scraping
+The application supports two operational modes:
+
+### MCP Server Mode
+- **Usage**: `cargo run -- mcp` or automatic when stdin is available
+- **Protocol**: JSON-RPC over stdin/stdout (MCP 2024-11-05 spec)
+- **Methods**: `initialize`, `tools/list`, `tools/call`
+- **Tool**: `fetch_web_content` for web scraping
+- **Integration**: Works with Claude Code, Cursor, and other MCP clients
+
+### REST API Server Mode  
+- **Usage**: `cargo run -- api --port 8085` or automatic when running in terminal
+- **Protocol**: HTTP REST API
+- **Endpoints**: `GET /health`, `POST /api/fetch`
+- **Port**: Default 8085 (configurable)
+- **Integration**: Works with web applications, curl, Postman, etc.
 
 ## Development Workflow
 

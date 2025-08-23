@@ -1,143 +1,97 @@
-# HTML MCP Reader
+# HTML API Reader
 
-A custom MCP (Model Context Protocol) server written in Rust that reads HTML or text content from web pages. Built using Clean Architecture principles with a workspace structure.
+A high-performance REST API server written in Rust that fetches and extracts content from web pages. Built using Clean Architecture principles with a workspace structure.
 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
 - [Features](#features)
+- [API Endpoints](#api-endpoints)
 - [Architecture](#architecture)
 - [Building](#building)
 - [Running](#running)
-- [MCP Tools](#mcp-tools)
-- [Docker Setup and Configuration](#docker-setup-and-configuration)
-- [MCP Client Configuration](#mcp-client-configuration)
+- [Docker Setup](#docker-setup)
 - [Project Structure](#project-structure)
 - [Development](#development)
 - [Error Handling](#error-handling)
 
 ## Quick Start
 
-### 🐳 Using Docker (Recommended)
-
-1. **Build the Docker image:**
-   ```bash
-   docker compose build
-   ```
-
-2. **Test the MCP server:**
-   ```bash
-   echo '{"jsonrpc":"2.0","id":"1","method":"initialize","params":{}}' | docker run -i --rm html-mcp-reader:latest
-   ```
-
-3. **Configure your MCP client:**
-   ```json
-   {
-     "mcpServers": {
-       "html-mcp-reader": {
-         "command": "docker",
-         "args": ["run", "-i", "--rm", "html-mcp-reader:latest"]
-       }
-     }
-   }
-   ```
-
-### 🦀 Using Local Rust Binary
+### 🚀 Using Local Development
 
 1. **Build and run:**
    ```bash
-   cargo build
+   cargo build --release
    cargo run --bin html-mcp-reader
    ```
 
-2. **Configure your MCP client:**
-   ```json
-   {
-     "mcpServers": {
-       "html-mcp-reader": {
-         "command": "cargo",
-         "args": ["run", "--bin", "html-mcp-reader"],
-         "cwd": "/path/to/your/html-mcp-reader"
-       }
-     }
-   }
+2. **Test the API:**
+   ```bash
+   # Health check
+   curl http://localhost:8085/health
+   
+   # Fetch web content
+   curl -X POST http://localhost:8085/api/fetch \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://example.com"}'
+   ```
+
+### 🐳 Using Docker
+
+1. **Build the Docker image:**
+   ```bash
+   docker build -t html-api-reader:latest .
+   ```
+
+2. **Run the container:**
+   ```bash
+   docker run -p 8085:8085 html-api-reader:latest
+   ```
+
+3. **Or use Docker Compose:**
+   ```bash
+   docker-compose up
    ```
 
 ## Features
 
-- Fetch content from web URLs
-- Extract text content from HTML
-- Parse HTML with customizable options
-- MCP protocol compliant for AI assistant integration
-- Clean Architecture with separated concerns
-- Async/await support with tokio
-- Configurable timeouts and User-Agent headers
-- Support for following redirects
+- **REST API**: Simple HTTP endpoints for web content fetching
+- **HTML Content Extraction**: Extract text content from HTML pages
+- **Flexible Options**: Configure text extraction, redirects, timeouts, and user agents
+- **Clean Architecture**: Separated concerns with domain-driven design
+- **Async/Await**: High-performance async processing with Tokio
+- **CORS Support**: Cross-origin requests enabled
+- **Health Monitoring**: Built-in health check endpoint
+- **Docker Ready**: Containerized deployment with health checks
 
-## Architecture
+## API Endpoints
 
-The project follows Clean Architecture principles with these layers:
+### GET /health
 
-- **Domain**: Core business logic and interfaces (`domain/`)
-- **Application**: Use cases and business services (`application/`)
-- **Infrastructure**: External adapters for HTTP, HTML parsing, and MCP protocol (`infrastructure/`)
-- **Runner**: Entry point and dependency injection (`runner/`)
+Returns the health status of the API server.
 
-## Dependencies
-
-Key dependencies used:
-- `reqwest`: HTTP client for fetching web content
-- `scraper`: HTML parsing and text extraction
-- `serde`/`serde_json`: Serialization for MCP protocol
-- `tracing`: Structured logging
-- `tokio`: Async runtime
-
-## Building
-
-### Local Development
-
-```bash
-cargo build
+**Response:**
+```json
+{
+  "status": "healthy",
+  "version": "0.1.0"
+}
 ```
 
-### Docker
-
-```bash
-# Build the Docker image
-docker compose build
-
-# Or build with Docker directly
-docker build -t html-mcp-reader:latest .
-```
-
-## Running
-
-### Local Development
-
-```bash
-cargo run --bin html-mcp-reader
-```
-
-### Docker
-
-```bash
-# Run with Docker Compose (recommended for development)
-docker-compose up
-
-# Run single command with Docker
-echo '{"jsonrpc":"2.0","id":"1","method":"initialize","params":{}}' | docker run -i --rm html-mcp-reader:latest
-
-# Interactive mode
-docker run -it --rm html-mcp-reader:latest
-```
-
-The server communicates via JSON-RPC over stdin/stdout following the MCP protocol.
-
-## MCP Tools
-
-### fetch_web_content
+### POST /api/fetch
 
 Fetches and extracts content from web pages.
+
+**Request Body:**
+```json
+{
+  "url": "https://example.com",
+  "extract_text_only": true,
+  "follow_redirects": true,
+  "timeout_seconds": 30,
+  "user_agent": "html-api-reader/0.1.0"
+}
+```
 
 **Parameters:**
 - `url` (required): The URL to fetch content from
@@ -146,21 +100,151 @@ Fetches and extracts content from web pages.
 - `timeout_seconds` (optional, default: 30, max: 300): Request timeout in seconds
 - `user_agent` (optional): Custom User-Agent header
 
-**Example Request:**
+**Response:**
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": "1",
-  "method": "tools/call",
-  "params": {
-    "name": "fetch_web_content",
-    "arguments": {
-      "url": "https://example.com",
-      "extract_text_only": true,
-      "timeout_seconds": 30
-    }
+  "url": "https://example.com",
+  "title": "Example Domain",
+  "text_content": "Example Domain This domain is for use in illustrative examples...",
+  "raw_html": "<!doctype html><html>...",
+  "metadata": {
+    "content_type": "text/html; charset=utf-8",
+    "status_code": 200,
+    "content_length": 1256,
+    "last_modified": null,
+    "charset": null
   }
 }
+```
+
+**Error Response:**
+```json
+{
+  "error": "INVALID_URL",
+  "message": "URL cannot be empty"
+}
+```
+
+## Architecture
+
+The project follows Clean Architecture principles with these layers:
+
+- **Domain**: Core business logic and interfaces (`domain/`)
+- **Application**: Use cases and business services (`application/`)
+- **Infrastructure**: External adapters for HTTP, HTML parsing, and REST API (`infrastructure/`)
+- **Runner**: Entry point and dependency injection (`runner/`)
+
+## Dependencies
+
+Key dependencies used:
+- `axum`: Modern web framework for the REST API
+- `tower-http`: HTTP middleware (CORS support)
+- `reqwest`: HTTP client for fetching web content
+- `scraper`: HTML parsing and text extraction
+- `serde`/`serde_json`: JSON serialization for API requests/responses
+- `tracing`: Structured logging
+- `tokio`: Async runtime
+
+## Building
+
+### Local Development
+
+```bash
+# Build debug version
+cargo build
+
+# Build release version (optimized)
+cargo build --release
+
+# Run tests
+cargo test
+
+# Check code quality
+cargo clippy
+cargo fmt
+```
+
+### Docker
+
+```bash
+# Build the Docker image
+docker build -t html-api-reader:latest .
+
+# Build with Docker Compose
+docker-compose build
+```
+
+## Running
+
+### Local Development
+
+```bash
+# Run in development mode
+cargo run --bin html-mcp-reader
+
+# Run release version
+./target/release/html-mcp-reader
+
+# Run with custom port
+PORT=9000 cargo run --bin html-mcp-reader
+```
+
+The server will start on `http://0.0.0.0:8085` by default.
+
+### Docker
+
+```bash
+# Run with Docker (recommended for production)
+docker run -p 8085:8085 html-api-reader:latest
+
+# Run with Docker Compose
+docker-compose up
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f html-api-reader
+
+# Stop
+docker-compose down
+```
+
+### Environment Variables
+
+- `PORT`: Server port (default: 8085)
+- `RUST_LOG`: Log level (default: info)
+- `RUST_BACKTRACE`: Enable backtraces (default: 1)
+
+## Docker Setup
+
+### Prerequisites
+
+- Docker installed on your system
+- Docker Compose (usually included with Docker Desktop)
+
+### Configuration
+
+The `docker-compose.yaml` includes:
+- **Port Mapping**: `8085:8085`
+- **Health Check**: `curl http://localhost:8085/health`
+- **Resource Limits**: 512M memory, 0.5 CPU
+- **Auto-restart**: `unless-stopped`
+- **Logging**: Structured logs with tracing
+
+### Testing with Docker
+
+```bash
+# Build and start
+docker-compose up --build
+
+# Test health endpoint
+curl http://localhost:8085/health
+
+# Test content fetching
+curl -X POST http://localhost:8085/api/fetch \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://httpbin.org/html"}'
 ```
 
 ## Project Structure
@@ -179,7 +263,7 @@ Fetches and extracts content from web pages.
 │   ├── src/
 │   │   ├── client/         # HTTP client implementation
 │   │   ├── adapter/        # HTML parser adapter
-│   │   └── mcp/            # MCP server implementation
+│   │   └── api/            # REST API server implementation
 └── runner/                # Application entry point
     └── src/
         └── main.rs         # Main application with DI setup
@@ -187,7 +271,7 @@ Fetches and extracts content from web pages.
 
 ## Development
 
-To add new features:
+### Adding New Features
 
 1. Define domain models in `domain/src/model/`
 2. Create interfaces in `domain/src/port/`
@@ -195,216 +279,93 @@ To add new features:
 4. Create infrastructure adapters in `infrastructure/src/`
 5. Wire dependencies in `runner/src/main.rs`
 
-## Docker Setup and Configuration
+### API Development
 
-### Prerequisites
+To add new endpoints:
 
-- Docker installed on your system
-- Docker Compose (usually included with Docker Desktop)
+1. Add request/response models to `domain/src/model/request.rs`
+2. Implement business logic in `application/src/use_case/`
+3. Add route handlers in `infrastructure/src/api/server.rs`
+4. Update the router in `create_router()` method
 
-### Building the Docker Image
+### Testing
 
-1. **Build using Docker Compose (recommended):**
-   ```bash
-   docker compose build
-   ```
+```bash
+# Run all tests
+cargo test
 
-2. **Build using Docker directly:**
-   ```bash
-   docker build -t html-mcp-reader:latest .
-   ```
+# Run tests for specific workspace member
+cargo test -p domain
+cargo test -p application
+cargo test -p infrastructure
 
-### Running with Docker
+# Run specific test
+cargo test test_name
 
-1. **Single request testing:**
-   ```bash
-   # Test initialization
-   echo '{"jsonrpc":"2.0","id":"1","method":"initialize","params":{}}' | docker run -i --rm html-mcp-reader:latest
-   
-   # Test tools listing
-   echo '{"jsonrpc":"2.0","id":"2","method":"tools/list","params":{}}' | docker run -i --rm html-mcp-reader:latest
-   
-   # Test web content fetching
-   echo '{"jsonrpc":"2.0","id":"3","method":"tools/call","params":{"name":"fetch_web_content","arguments":{"url":"https://example.com","extract_text_only":true}}}' | docker run -i --rm html-mcp-reader:latest
-   ```
-
-2. **Using provided test scripts:**
-   ```bash
-   # Make scripts executable
-   chmod +x test-docker.sh test-mcp.sh
-   
-   # Run Docker tests
-   ./test-docker.sh
-   ```
-
-3. **Development with Docker Compose:**
-   ```bash
-   # Start in background
-   docker-compose up -d
-   
-   # View logs
-   docker-compose logs -f html-mcp-reader
-   
-   # Stop
-   docker-compose down
-   ```
-
-## MCP Client Configuration
-
-### Claude Code
-
-Add this configuration to your Claude Code settings:
-
-**For Local Binary:**
-```json
-{
-  "mcpServers": {
-    "html-mcp-reader": {
-      "command": "cargo",
-      "args": ["run", "--bin", "html-mcp-reader"],
-      "cwd": "/path/to/your/html-mcp-reader"
-    }
-  }
-}
+# Integration tests with running server
+cargo run --bin html-mcp-reader &
+SERVER_PID=$!
+curl http://localhost:8085/health
+kill $SERVER_PID
 ```
-
-**For Docker:**
-```json
-{
-  "mcpServers": {
-    "html-mcp-reader": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "html-mcp-reader:latest"]
-    }
-  }
-}
-```
-
-### Windsurf
-
-Add to your Windsurf configuration file (`.windsurf/settings.json`):
-
-**For Local Binary:**
-```json
-{
-  "mcp.servers": {
-    "html-mcp-reader": {
-      "command": "cargo",
-      "args": ["run", "--bin", "html-mcp-reader"],
-      "cwd": "/path/to/your/html-mcp-reader"
-    }
-  }
-}
-```
-
-**For Docker:**
-```json
-{
-  "mcp.servers": {
-    "html-mcp-reader": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "html-mcp-reader:latest"]
-    }
-  }
-}
-```
-
-### Cursor
-
-Add to your Cursor settings (`.vscode/settings.json` or global settings):
-
-**For Local Binary:**
-```json
-{
-  "mcp.servers": {
-    "html-mcp-reader": {
-      "command": "cargo",
-      "args": ["run", "--bin", "html-mcp-reader"],
-      "cwd": "/path/to/your/html-mcp-reader"
-    }
-  }
-}
-```
-
-**For Docker:**
-```json
-{
-  "mcp.servers": {
-    "html-mcp-reader": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "html-mcp-reader:latest"]
-    }
-  }
-}
-```
-
-### Generic MCP Client Configuration
-
-For any MCP-compatible client, use these command configurations:
-
-**Local Binary:**
-- **Command:** `cargo`
-- **Args:** `["run", "--bin", "html-mcp-reader"]`
-- **Working Directory:** `/path/to/your/html-mcp-reader`
-
-**Docker:**
-- **Command:** `docker`
-- **Args:** `["run", "-i", "--rm", "html-mcp-reader:latest"]`
-
-### Environment Variables (Optional)
-
-You can configure the following environment variables:
-
-```json
-{
-  "mcpServers": {
-    "html-mcp-reader": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "html-mcp-reader:latest"],
-      "env": {
-        "RUST_LOG": "info",
-        "RUST_BACKTRACE": "1"
-      }
-    }
-  }
-}
-```
-
-### Testing Your Configuration
-
-After adding the configuration, test it with your MCP client:
-
-1. **Initialize the server:**
-   ```
-   Ask your AI assistant: "Can you initialize the html-mcp-reader?"
-   ```
-
-2. **List available tools:**
-   ```
-   Ask: "What tools are available in html-mcp-reader?"
-   ```
-
-3. **Fetch web content:**
-   ```
-   Ask: "Can you fetch the content from https://example.com using html-mcp-reader?"
-   ```
-
-### Troubleshooting
-
-- **Docker not found:** Ensure Docker is installed and in your PATH
-- **Permission denied:** Make sure your user can run Docker commands
-- **Container startup issues:** Check logs with `docker-compose logs`
-- **Network issues:** Ensure the container can access the internet for fetching web content
-
-For more detailed Docker information, see [DOCKER.md](DOCKER.md).
 
 ## Error Handling
 
-The server returns appropriate MCP error codes:
-- `-32700`: Parse error
-- `-32601`: Method not found
-- `-32602`: Invalid parameters
-- `-32001`: Network error
-- `-32002`: Timeout error
-- `-32003`: HTTP error
-- `-32004`: Parse error
+The API returns appropriate HTTP status codes and error responses:
+
+### HTTP Status Codes
+- `200 OK`: Successful request
+- `400 Bad Request`: Invalid request parameters
+- `500 Internal Server Error`: Server-side errors
+
+### Error Response Format
+```json
+{
+  "error": "ERROR_CODE",
+  "message": "Human-readable error description"
+}
+```
+
+### Common Error Codes
+- `INVALID_URL`: Empty or malformed URL
+- `FETCH_ERROR`: Network, timeout, or HTTP errors
+- `PARSE_ERROR`: HTML parsing failures
+
+### Logging
+
+The application uses structured logging with different levels:
+- `INFO`: Normal operation logs
+- `ERROR`: Error conditions
+- `DEBUG`: Detailed debugging information
+
+Configure logging with the `RUST_LOG` environment variable:
+```bash
+# Info level (default)
+RUST_LOG=info cargo run
+
+# Debug level for detailed logs
+RUST_LOG=debug cargo run
+
+# Module-specific logging
+RUST_LOG=infrastructure::api::server=debug cargo run
+```
+
+## Performance
+
+- **Async/Await**: Non-blocking I/O operations
+- **Connection Pooling**: HTTP client reuses connections
+- **Memory Efficient**: Streaming HTML parsing
+- **Resource Limits**: Configurable timeouts and memory limits
+- **Docker Optimization**: Multi-stage build with minimal runtime image
+
+## Security
+
+- **Non-root User**: Docker container runs as non-root user
+- **Resource Limits**: Memory and CPU limits in Docker Compose
+- **Input Validation**: URL validation and parameter sanitization
+- **Timeout Protection**: Configurable request timeouts
+- **CORS**: Cross-origin request support (configurable)
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).

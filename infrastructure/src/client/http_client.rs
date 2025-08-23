@@ -100,7 +100,7 @@ impl ContentFetcher for HttpClient {
         let title = extract_title(&raw_html);
         
         // Extract text content if requested
-        let text_content = if request.extract_text_only {
+        let text_content = if request.extract_text_only.unwrap_or(true) {
             extract_text_content(&raw_html)
         } else {
             raw_html.clone()

@@ -3,6 +3,9 @@ use std::io::{self, BufRead, BufReader, Write};
 use serde_json::{json, Value};
 use tracing::{info, error, debug, Level};
 use tracing_subscriber::FmtSubscriber;
+use clap::{Parser, Subcommand};
+use axum::serve;
+use tokio::net::TcpListener;
 
 use domain::model::request::McpRequest;
 use application::service::{
@@ -14,12 +17,35 @@ use infrastructure::{
     client::http_client::HttpClient,
     adapter::html_parser_adapter::HtmlParserAdapter,
     mcp::server::McpServer,
+    api::server::ApiServer,
 };
 
 type AppMcpServer = McpServer<HttpClient, HtmlParserAdapter>;
+type AppApiServer = ApiServer<HttpClient, HtmlParserAdapter>;
+
+#[derive(Parser)]
+#[command(name = "html-mcp-reader")]
+#[command(about = "HTML content fetching server - supports both MCP and REST API modes")]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Run as MCP server (JSON-RPC over stdin/stdout)
+    Mcp,
+    /// Run as REST API server (HTTP endpoints)
+    Api {
+        /// Port to listen on
+        #[arg(short, long, default_value = "8085")]
+        port: u16,
+    },
+}
 
 struct AppState {
     mcp_server: AppMcpServer,
+    api_server: AppApiServer,
 }
 
 impl AppState {
@@ -42,28 +68,54 @@ impl AppState {
         );
         let web_content_use_case_arc = Arc::new(web_content_use_case);
 
-        let mcp_server = McpServer::new(web_content_use_case_arc);
+        let mcp_server = McpServer::new(web_content_use_case_arc.clone());
+        let api_server = ApiServer::new(web_content_use_case_arc);
 
-        Self { mcp_server }
+        Self { mcp_server, api_server }
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
+
     // Initialize logging
     let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::INFO)
-        .with_writer(std::io::stderr) // Log to stderr to avoid interfering with MCP protocol on stdout
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("Setting default subscriber failed");
 
-    info!("Starting HTML MCP Reader server");
-
     // Initialize application state
     let state = AppState::new();
 
+    match cli.command {
+        Some(Commands::Mcp) => {
+            run_mcp_server(state).await
+        }
+        Some(Commands::Api { port }) => {
+            run_api_server(state, port).await
+        }
+        None => {
+            // Default behavior: check if stdin is available (MCP mode) or run as API
+            if atty::is(atty::Stream::Stdin) {
+                // Running in terminal, default to API mode
+                info!("No command specified and running in terminal. Starting API server on port 8085");
+                info!("Use 'cargo run -- mcp' to run as MCP server");
+                info!("Use 'cargo run -- api --port <PORT>' to run as API server on specific port");
+                run_api_server(state, 8085).await
+            } else {
+                // Stdin available, assume MCP mode
+                info!("Stdin detected, running as MCP server");
+                run_mcp_server(state).await
+            }
+        }
+    }
+}
+
+async fn run_mcp_server(state: AppState) -> Result<(), Box<dyn std::error::Error>> {
+    info!("Starting HTML MCP Reader server");
     info!("MCP server initialized, waiting for requests...");
 
     // Read JSON-RPC requests from stdin and write responses to stdout
@@ -108,6 +160,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     info!("MCP server shutting down");
+    Ok(())
+}
+
+async fn run_api_server(state: AppState, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    info!("Starting HTML API Reader server");
+
+    // Create router
+    let app = state.api_server.create_router();
+
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = TcpListener::bind(&addr).await?;
+
+    info!("REST API server listening on {}", addr);
+    info!("Health check available at: http://{}/health", addr);
+    info!("Fetch endpoint available at: http://{}/api/fetch", addr);
+
+    serve(listener, app).await?;
+
+    info!("API server shutting down");
     Ok(())
 }
 

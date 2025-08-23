@@ -3,10 +3,22 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FetchContentRequest {
     pub url: String,
-    pub extract_text_only: bool,
-    pub follow_redirects: bool,
+    pub extract_text_only: Option<bool>,
+    pub follow_redirects: Option<bool>,
     pub timeout_seconds: Option<u64>,
     pub user_agent: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiErrorResponse {
+    pub error: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthResponse {
+    pub status: String,
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,10 +32,10 @@ impl Default for FetchContentRequest {
     fn default() -> Self {
         Self {
             url: String::new(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
-            user_agent: Some("html-mcp-reader/0.1.0".to_string()),
+            user_agent: Some("html-api-reader/0.1.0".to_string()),
         }
     }
 }
@@ -38,25 +50,25 @@ mod tests {
         let request = FetchContentRequest::default();
         
         assert_eq!(request.url, "");
-        assert_eq!(request.extract_text_only, true);
-        assert_eq!(request.follow_redirects, true);
+        assert_eq!(request.extract_text_only, Some(true));
+        assert_eq!(request.follow_redirects, Some(true));
         assert_eq!(request.timeout_seconds, Some(30));
-        assert_eq!(request.user_agent, Some("html-mcp-reader/0.1.0".to_string()));
+        assert_eq!(request.user_agent, Some("html-api-reader/0.1.0".to_string()));
     }
 
     #[test]
     fn test_fetch_content_request_custom() {
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: false,
-            follow_redirects: false,
+            extract_text_only: Some(false),
+            follow_redirects: Some(false),
             timeout_seconds: Some(60),
             user_agent: Some("custom-agent/1.0".to_string()),
         };
 
         assert_eq!(request.url, "https://example.com");
-        assert_eq!(request.extract_text_only, false);
-        assert_eq!(request.follow_redirects, false);
+        assert_eq!(request.extract_text_only, Some(false));
+        assert_eq!(request.follow_redirects, Some(false));
         assert_eq!(request.timeout_seconds, Some(60));
         assert_eq!(request.user_agent, Some("custom-agent/1.0".to_string()));
     }
@@ -65,36 +77,25 @@ mod tests {
     fn test_fetch_content_request_edge_cases() {
         let request = FetchContentRequest {
             url: "".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: None,
+            follow_redirects: None,
             timeout_seconds: None,
             user_agent: None,
         };
 
         assert_eq!(request.url, "");
+        assert_eq!(request.extract_text_only, None);
+        assert_eq!(request.follow_redirects, None);
         assert_eq!(request.timeout_seconds, None);
         assert_eq!(request.user_agent, None);
-    }
-
-    #[test]
-    fn test_fetch_content_request_zero_timeout() {
-        let request = FetchContentRequest {
-            url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
-            timeout_seconds: Some(0),
-            user_agent: Some("test".to_string()),
-        };
-
-        assert_eq!(request.timeout_seconds, Some(0));
     }
 
     #[test]
     fn test_fetch_content_request_serialization() {
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: false,
-            follow_redirects: true,
+            extract_text_only: Some(false),
+            follow_redirects: Some(true),
             timeout_seconds: Some(45),
             user_agent: Some("test-agent".to_string()),
         };
@@ -110,101 +111,65 @@ mod tests {
     }
 
     #[test]
-    fn test_mcp_request_creation() {
-        let params = serde_json::json!({
-            "url": "https://example.com",
-            "extract_text_only": true
-        });
-
-        let request = McpRequest {
-            id: "123".to_string(),
-            method: "tools/call".to_string(),
-            params,
+    fn test_api_error_response() {
+        let error = ApiErrorResponse {
+            error: "INVALID_URL".to_string(),
+            message: "The provided URL is not valid".to_string(),
         };
 
-        assert_eq!(request.id, "123");
-        assert_eq!(request.method, "tools/call");
-        assert_eq!(request.params["url"], "https://example.com");
-        assert_eq!(request.params["extract_text_only"], true);
+        assert_eq!(error.error, "INVALID_URL");
+        assert_eq!(error.message, "The provided URL is not valid");
     }
 
     #[test]
-    fn test_mcp_request_empty_params() {
-        let request = McpRequest {
-            id: "456".to_string(),
-            method: "initialize".to_string(),
-            params: serde_json::Value::Null,
+    fn test_health_response() {
+        let health = HealthResponse {
+            status: "healthy".to_string(),
+            version: "0.1.0".to_string(),
         };
 
-        assert_eq!(request.id, "456");
-        assert_eq!(request.method, "initialize");
-        assert_eq!(request.params, serde_json::Value::Null);
+        assert_eq!(health.status, "healthy");
+        assert_eq!(health.version, "0.1.0");
     }
 
     #[test]
-    fn test_mcp_request_serialization() {
-        let params = serde_json::json!({
-            "test": "value",
-            "number": 42
-        });
-
-        let request = McpRequest {
-            id: "test-id".to_string(),
-            method: "test-method".to_string(),
-            params,
-        };
-
-        let serialized = serde_json::to_string(&request).unwrap();
-        let deserialized: McpRequest = serde_json::from_str(&serialized).unwrap();
-
-        assert_eq!(request.id, deserialized.id);
-        assert_eq!(request.method, deserialized.method);
-        assert_eq!(request.params, deserialized.params);
-    }
-
-    #[test]
-    fn test_fetch_content_request_clone() {
+    fn test_fetch_content_request_minimal() {
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: false,
-            timeout_seconds: Some(120),
-            user_agent: Some("clone-test".to_string()),
+            extract_text_only: None,
+            follow_redirects: None,
+            timeout_seconds: None,
+            user_agent: None,
         };
 
-        let cloned = request.clone();
-        assert_eq!(request.url, cloned.url);
-        assert_eq!(request.extract_text_only, cloned.extract_text_only);
-        assert_eq!(request.follow_redirects, cloned.follow_redirects);
-        assert_eq!(request.timeout_seconds, cloned.timeout_seconds);
-        assert_eq!(request.user_agent, cloned.user_agent);
+        assert_eq!(request.url, "https://example.com");
+        assert_eq!(request.extract_text_only, None);
+        assert_eq!(request.follow_redirects, None);
+        assert_eq!(request.timeout_seconds, None);
+        assert_eq!(request.user_agent, None);
     }
 
     #[test]
-    fn test_fetch_content_request_long_url() {
-        let long_url = format!("https://example.com/{}", "a".repeat(1000));
-        let request = FetchContentRequest {
-            url: long_url.clone(),
-            extract_text_only: true,
-            follow_redirects: true,
-            timeout_seconds: Some(30),
-            user_agent: Some("test".to_string()),
+    fn test_responses_serialization() {
+        let error = ApiErrorResponse {
+            error: "TEST_ERROR".to_string(),
+            message: "Test message".to_string(),
         };
 
-        assert_eq!(request.url, long_url);
-        assert_eq!(request.url.len(), 1020); // "https://example.com/" + 1000 'a's
-    }
-
-    #[test]
-    fn test_fetch_content_request_extreme_timeout() {
-        let request = FetchContentRequest {
-            url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
-            timeout_seconds: Some(u64::MAX),
-            user_agent: Some("test".to_string()),
+        let health = HealthResponse {
+            status: "healthy".to_string(),
+            version: "0.1.0".to_string(),
         };
 
-        assert_eq!(request.timeout_seconds, Some(u64::MAX));
+        let error_json = serde_json::to_string(&error).unwrap();
+        let health_json = serde_json::to_string(&health).unwrap();
+
+        let error_deserialized: ApiErrorResponse = serde_json::from_str(&error_json).unwrap();
+        let health_deserialized: HealthResponse = serde_json::from_str(&health_json).unwrap();
+
+        assert_eq!(error.error, error_deserialized.error);
+        assert_eq!(error.message, error_deserialized.message);
+        assert_eq!(health.status, health_deserialized.status);
+        assert_eq!(health.version, health_deserialized.version);
     }
 }

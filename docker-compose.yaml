@@ -1,18 +1,21 @@
 # Note: version is obsolete in newer Docker Compose versions
 
 services:
-  html-mcp-reader:
+  html-api-reader:
     build:
       context: .
       dockerfile: Dockerfile
-    image: html-mcp-reader:latest
-    container_name: html-mcp-reader
+    image: html-api-reader:latest
+    container_name: html-api-reader
     restart: unless-stopped
+    ports:
+      - "8085:8085"
     
     # Environment variables
     environment:
       - RUST_LOG=info
       - RUST_BACKTRACE=1
+      - PORT=8085
     
     # Resource limits
     deploy:
@@ -26,7 +29,7 @@ services:
     
     # Health check
     healthcheck:
-      test: ["CMD", "pgrep", "html-mcp-reader"]
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -40,16 +43,15 @@ services:
     # volumes:
     #   - ./data:/app/data
     
-    # Since MCP typically uses stdin/stdout, we keep the container running
-    # and allow interactive mode if needed
-    stdin_open: true
-    tty: true
+    # REST API doesn't need stdin/stdout interaction
+    # stdin_open: true
+    # tty: true
     
     # Labels for better organization
     labels:
-      - "com.example.description=HTML MCP Reader - Model Context Protocol server for web content fetching"
+      - "com.example.description=HTML API Reader - REST API server for web content fetching"
       - "com.example.version=0.1.0"
-      - "com.example.component=mcp-server"
+      - "com.example.component=api-server"
 
 # If you need a custom network
 # networks:

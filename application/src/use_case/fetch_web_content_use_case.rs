@@ -3,6 +3,7 @@ use tracing::{info, error};
 use domain::model::{
     request::FetchContentRequest,
     response::{FetchContentResponse, McpResponse, McpError},
+    content::HtmlContent,
 };
 use domain::port::{
     content_fetcher::{ContentFetcher, ContentFetcherError},
@@ -34,6 +35,39 @@ where
         Self {
             fetch_service,
             parse_service,
+        }
+    }
+
+    pub async fn execute_for_api(&self, request: FetchContentRequest) -> Result<HtmlContent, String> {
+        // Convert optional fields to required ones with defaults
+        let processed_request = FetchContentRequest {
+            url: request.url.clone(),
+            extract_text_only: request.extract_text_only.or(Some(true)),
+            follow_redirects: request.follow_redirects.or(Some(true)),
+            timeout_seconds: request.timeout_seconds.or(Some(30)),
+            user_agent: request.user_agent.or(Some("html-api-reader/0.1.0".to_string())),
+        };
+
+        if let Err(validation_error) = self.fetch_service.validate_request(&processed_request).await {
+            return Err(format!("Invalid parameters: {}", validation_error));
+        }
+
+        match self.fetch_service.fetch_and_process_content(processed_request).await {
+            Ok(content) => {
+                info!("Successfully fetched content from: {}", content.url);
+                Ok(content)
+            }
+            Err(error) => {
+                error!("Failed to fetch content: {:?}", error);
+                let message = match error {
+                    ContentFetcherError::Network(msg) => format!("Network error: {}", msg),
+                    ContentFetcherError::InvalidUrl(msg) => format!("Invalid URL: {}", msg),
+                    ContentFetcherError::Timeout(seconds) => format!("Request timeout after {} seconds", seconds),
+                    ContentFetcherError::Http { status, message } => format!("HTTP {}: {}", status, message),
+                    ContentFetcherError::Parse(msg) => format!("Parse error: {}", msg),
+                };
+                Err(message)
+            }
         }
     }
 
@@ -204,8 +238,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -233,8 +267,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "".to_string(), // Invalid empty URL
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -263,8 +297,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -292,8 +326,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -324,8 +358,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com/404".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -353,8 +387,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -382,8 +416,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -410,8 +444,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "ftp://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(30),
             user_agent: Some("test".to_string()),
         };
@@ -438,8 +472,8 @@ mod tests {
 
         let request = FetchContentRequest {
             url: "https://example.com".to_string(),
-            extract_text_only: true,
-            follow_redirects: true,
+            extract_text_only: Some(true),
+            follow_redirects: Some(true),
             timeout_seconds: Some(400), // Too high
             user_agent: Some("test".to_string()),
         };
