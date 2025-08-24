@@ -77,6 +77,8 @@ mod tests {
             content_length: Some(100),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {

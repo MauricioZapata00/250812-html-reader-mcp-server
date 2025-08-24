@@ -142,6 +142,8 @@ mod tests {
                     content_length: Some(100),
                     last_modified: None,
                     charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
                 };
 
                 Ok(HtmlContent {
@@ -168,6 +170,8 @@ mod tests {
                 content_length: Some(raw_html.len()),
                 last_modified: None,
                 charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
             };
 
             Ok(HtmlContent {

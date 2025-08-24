@@ -14,14 +14,14 @@ use application::service::{
 };
 use application::use_case::fetch_web_content_use_case::FetchWebContentUseCase;
 use infrastructure::{
-    client::http_client::HttpClient,
+    client::hybrid_fetcher::HybridContentFetcher,
     adapter::html_parser_adapter::HtmlParserAdapter,
     mcp::server::McpServer,
     api::server::ApiServer,
 };
 
-type AppMcpServer = McpServer<HttpClient, HtmlParserAdapter>;
-type AppApiServer = ApiServer<HttpClient, HtmlParserAdapter>;
+type AppMcpServer = McpServer<HybridContentFetcher, HtmlParserAdapter>;
+type AppApiServer = ApiServer<HybridContentFetcher, HtmlParserAdapter>;
 
 #[derive(Parser)]
 #[command(name = "html-mcp-reader")]
@@ -49,14 +49,14 @@ struct AppState {
 }
 
 impl AppState {
-    fn new() -> Self {
-        let http_client = HttpClient::new();
-        let http_client_arc = Arc::new(http_client);
+    async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let hybrid_fetcher = HybridContentFetcher::new(None).await?;
+        let hybrid_fetcher_arc = Arc::new(hybrid_fetcher);
 
         let html_parser = HtmlParserAdapter::new();
         let html_parser_arc = Arc::new(html_parser);
 
-        let fetch_service = ContentFetchService::new(http_client_arc.clone());
+        let fetch_service = ContentFetchService::new(hybrid_fetcher_arc.clone());
         let fetch_service_arc = Arc::new(fetch_service);
 
         let parse_service = ContentParseService::new(html_parser_arc.clone());
@@ -71,7 +71,7 @@ impl AppState {
         let mcp_server = McpServer::new(web_content_use_case_arc.clone());
         let api_server = ApiServer::new(web_content_use_case_arc);
 
-        Self { mcp_server, api_server }
+        Ok(Self { mcp_server, api_server })
     }
 }
 
@@ -88,7 +88,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Setting default subscriber failed");
 
     // Initialize application state
-    let state = AppState::new();
+    let state = AppState::new().await?;
 
     match cli.command {
         Some(Commands::Mcp) => {

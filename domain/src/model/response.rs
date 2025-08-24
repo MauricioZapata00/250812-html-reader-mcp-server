@@ -43,6 +43,8 @@ mod tests {
             content_length: Some(100),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -113,6 +115,8 @@ mod tests {
             content_length: Some(100),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -142,6 +146,8 @@ mod tests {
             content_length: None,
             last_modified: None,
             charset: None,
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -192,6 +198,8 @@ mod tests {
             content_length: Some(100),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -250,6 +258,8 @@ mod tests {
             content_length: Some(0),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {

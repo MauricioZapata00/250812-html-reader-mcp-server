@@ -16,6 +16,23 @@ pub struct ContentMetadata {
     pub content_length: Option<usize>,
     pub last_modified: Option<String>,
     pub charset: Option<String>,
+    pub javascript_detected: Option<bool>,
+    pub fetch_method: Option<FetchMethod>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FetchMethod {
+    Static,
+    Browser,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrowserOptions {
+    pub wait_for_js: bool,
+    pub timeout_ms: u64,
+    pub wait_for_selector: Option<String>,
+    pub disable_images: bool,
+    pub user_agent: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +62,8 @@ mod tests {
             content_length: Some(1024),
             last_modified: Some("Mon, 01 Jan 2024 00:00:00 GMT".to_string()),
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -70,6 +89,8 @@ mod tests {
             content_length: None,
             last_modified: None,
             charset: None,
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -94,6 +115,8 @@ mod tests {
             content_length: Some(0),
             last_modified: Some("".to_string()),
             charset: Some("".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         assert_eq!(metadata.content_type, "");
@@ -130,6 +153,8 @@ mod tests {
             content_length: Some(1024),
             last_modified: Some("Mon, 01 Jan 2024 00:00:00 GMT".to_string()),
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -180,6 +205,8 @@ mod tests {
             content_length: Some(1024),
             last_modified: Some("Mon, 01 Jan 2024 00:00:00 GMT".to_string()),
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -208,6 +235,8 @@ mod tests {
             content_length: Some(large_html.len()),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         let content = HtmlContent {
@@ -221,5 +250,47 @@ mod tests {
         assert_eq!(content.text_content.len(), 1_000_000);
         assert_eq!(content.raw_html.len(), large_html.len());
         assert_eq!(content.metadata.content_length, Some(large_html.len()));
+    }
+
+    #[test]
+    fn test_browser_options_creation() {
+        let options = BrowserOptions {
+            wait_for_js: true,
+            timeout_ms: 30000,
+            wait_for_selector: Some("#main-content".to_string()),
+            disable_images: true,
+            user_agent: Some("Mozilla/5.0 test".to_string()),
+        };
+
+        assert_eq!(options.wait_for_js, true);
+        assert_eq!(options.timeout_ms, 30000);
+        assert_eq!(options.wait_for_selector, Some("#main-content".to_string()));
+        assert_eq!(options.disable_images, true);
+        assert_eq!(options.user_agent, Some("Mozilla/5.0 test".to_string()));
+    }
+
+    #[test]
+    fn test_fetch_method_variants() {
+        let static_method = FetchMethod::Static;
+        let browser_method = FetchMethod::Browser;
+
+        assert!(matches!(static_method, FetchMethod::Static));
+        assert!(matches!(browser_method, FetchMethod::Browser));
+    }
+
+    #[test]
+    fn test_content_metadata_with_browser_fields() {
+        let metadata = ContentMetadata {
+            content_type: "text/html".to_string(),
+            status_code: 200,
+            content_length: Some(1024),
+            last_modified: None,
+            charset: Some("utf-8".to_string()),
+            javascript_detected: Some(true),
+            fetch_method: Some(FetchMethod::Browser),
+        };
+
+        assert_eq!(metadata.javascript_detected, Some(true));
+        assert!(matches!(metadata.fetch_method, Some(FetchMethod::Browser)));
     }
 }

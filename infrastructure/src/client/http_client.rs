@@ -70,6 +70,8 @@ impl HttpClient {
                 .and_then(|h| h.to_str().ok())
                 .map(|s| s.to_string()),
             charset: None, // Could be extracted from content-type header
+            javascript_detected: None,
+            fetch_method: Some(domain::model::content::FetchMethod::Static),
         }
     }
 }

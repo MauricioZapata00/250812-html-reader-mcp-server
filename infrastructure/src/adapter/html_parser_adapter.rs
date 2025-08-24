@@ -45,6 +45,8 @@ impl ContentParser for HtmlParserAdapter {
             content_length: Some(raw_html.len()),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         info!("Successfully parsed HTML content with {} characters", text_content.len());
@@ -95,6 +97,8 @@ mod tests {
             content_length: Some(raw_html.len()),
             last_modified: None,
             charset: Some("utf-8".to_string()),
+            javascript_detected: None,
+            fetch_method: None,
         };
 
         HtmlContent {

@@ -5,11 +5,9 @@ edition = "2021"
 
 [dependencies]
 domain = { path = "../domain" }
-serde = { workspace = true }
 tracing = { workspace = true }
 async-trait = { workspace = true }
-thiserror = { workspace = true }
-uuid = { version = "1.0", features = ["v4"] }
+uuid = { version = "1.18.0", features = ["v6"] }
 
 [dev-dependencies]
 tokio = { workspace = true }
